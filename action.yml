@@ -1,0 +1,21 @@
+name: "Run command in a Flox environment"
+description: "Runs a command in the context of the Flox environment."
+author: "flox <hello@floxdev.com>"
+
+inputs:
+  command:
+    description: "A command to run inside the Flox environment."
+    required: true
+  environment:
+    description: "Environment to run the command in. If not specified it will try to find local Flox environment."
+    default: null
+
+runs:
+
+  using: "composite"
+
+  # TODO: automatically login to floxhub if not logged in already and FLOX_TOKEN is present
+
+  - name: "Run flox activate"
+    shell: "bash"
+    run: "flox activate ${{ inputs.environment == null && '' || format('--remote={0}', inputs.environment) }} -- ${{ inputs.command }}"
