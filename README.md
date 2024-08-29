@@ -1,19 +1,15 @@
 <h1 align="center">
   <a href="https://flox.dev" target="_blank">
     <picture>
-      <source media="(prefers-color-scheme: dark)"  srcset="img/flox_orange_small.png" />
-      <source media="(prefers-color-scheme: light)" srcset="img/flox_blue_small.png" />
-      <img src="img/flox_blue_small.png" alt="flox logo" />
+      <source media="(prefers-color-scheme: dark)"  srcset="img/flox-logo-white-on-black.png" />
+      <source media="(prefers-color-scheme: light)" srcset="img/flox-logo-black-on-white.png" />
+      <img src="img/flox-logo-black-on-white.png" alt="flox logo" />
     </picture>
   </a>
 </h1>
 
 <h2 align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)"  srcset="img/harness_the_power_of_nix_dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="img/harness_the_power_of_nix_light.svg" />
-    <img height="24" src="img/harness_the_power_of_nix_light.svg" alt="Harness the Power of Nix" />
-  </picture>
+  Developer environments you can take with you
 </h2>
 
 <!-- TODO: here comes the graphic
