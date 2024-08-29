@@ -30,7 +30,7 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v4"
 
-      - name: "Test Local Action"
+      - name: "Install Flox"
         uses: "flox/install-flox-action@main"
         with:
           channel: "${{ matrix.channel }}"
