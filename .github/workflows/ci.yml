@@ -28,7 +28,7 @@ jobs:
         uses: "actions/checkout@v4"
 
       - name: "Test Local Action"
-        uses: "flox/install-flox-action"
+        uses: "flox/install-flox-action@main"
 
       - name: "Test Local Action"
         uses: "./"
