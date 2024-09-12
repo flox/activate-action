@@ -2,6 +2,10 @@ name: "Run command in a Flox environment"
 description: "Runs a command in the context of the Flox environment."
 author: "flox <hello@floxdev.com>"
 
+branding:
+  color: "blue"
+  icon: "moon"
+
 inputs:
   command:
     description: "A command to run inside the Flox environment."
