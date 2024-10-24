@@ -68,7 +68,7 @@ jobs:
       uses: flox/install-flox-action@v2
 
     - name: Build website
-      uses: flox/activate-action@1
+      uses: flox/activate-action@v1
       with:
         command: npm run build
 ```
