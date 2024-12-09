@@ -71,6 +71,13 @@ jobs:
       uses: flox/activate-action@v1
       with:
         command: npm run build
+        dir: ./frontend
+
+    - name: Activate remote environment
+      uses: flox/activate-action@v1
+      with:
+        environment: my-username/my-netlify-env
+        command: netlify publish
 ```
 
 ## 📫 Have a question? Want to chat? Ran into a problem?

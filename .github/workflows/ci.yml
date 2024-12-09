@@ -39,8 +39,14 @@ jobs:
         with:
           channel: "${{ matrix.channel }}"
 
+      - name: "Test Remote environment"
+        uses: "./"
+        with:
+          environment: "flox/python-pip"
+          command: "python --version"
+
       - name: "Test Local Action"
         uses: "./"
         with:
-          environment: "flox/nb"
           command: "python --version"
+          dir: "./test-env"
