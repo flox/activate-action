@@ -16,10 +16,13 @@ inputs:
   dir:
     description: "Path containing a .flox/ directory."
     default: null
+  start-services:
+    description: "Start services before running the command."
+    default: false
 
 runs:
   using: "composite"
   steps:
     - name: "Run flox activate"
       shell: "bash"
-      run: "flox activate ${{ inputs.environment != null && format('--remote={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} -- ${{ inputs.command }}"
+      run: "flox activate ${{ inputs.environment != null && format('--remote={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} ${{ inputs.start-services != true && '--start-services' || '' }} -- ${{ inputs.command }}"
