@@ -22,4 +22,4 @@ runs:
   steps:
     - name: "Run flox activate"
       shell: "bash"
-      run: "flox activate ${{ inputs.environment != null && format('--reference={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} -- ${{ inputs.command }}"
+      run: "flox activate ${{ inputs.environment != null && format('-r={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} -- ${{ inputs.command }}"
