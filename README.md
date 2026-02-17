@@ -77,7 +77,7 @@ jobs:
       uses: flox/activate-action@v1
       with:
         environment: my-username/my-netlify-env
-        command: netlify publish
+        command: netlify deploy
 ```
 
 ## 📫 Have a question? Want to chat? Ran into a problem?
