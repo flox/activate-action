@@ -12,12 +12,6 @@
   Developer environments you can take with you
 </h2>
 
-<!-- TODO: here comes the graphic
- show immediate value proposition
- a short demo of basics would be good for now
- a bold statement: Free yourself from container walls.
--->
-
 <h3 align="center">
    &emsp;
    <a href="https://discourse.flox.dev"><b>Discourse</b></a>
@@ -42,7 +36,7 @@
   </a>
 </p>
 
-Runs command in the context of [Flox][flox-github] environment.
+Runs a command in the context of a [Flox][flox-github] environment.
 
 
 ## ⭐ Getting Started
@@ -61,23 +55,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install flox
-      uses: flox/install-flox-action@v2
+      - name: Install Flox
+        uses: flox/install-flox-action@v2
 
-    - name: Build website
-      uses: flox/activate-action@v1
-      with:
-        command: npm run build
-        dir: ./frontend
+      - name: Build website
+        uses: flox/activate-action@v1
+        with:
+          command: npm run build
+          dir: ./frontend
 
-    - name: Activate remote environment
-      uses: flox/activate-action@v1
-      with:
-        environment: my-username/my-netlify-env
-        command: netlify deploy
+      - name: Activate remote environment
+        uses: flox/activate-action@v1
+        with:
+          environment: my-username/my-netlify-env
+          command: netlify deploy
 ```
 
 ## 📫 Have a question? Want to chat? Ran into a problem?
