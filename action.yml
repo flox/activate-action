@@ -1,6 +1,6 @@
-name: "Run command in a Flox environment"
-description: "Runs a command in the context of the Flox environment."
-author: "flox <hello@floxdev.com>"
+name: "Flox Activate"
+description: "Run a command inside a Flox environment"
+author: "Flox <hello@flox.dev>"
 
 branding:
   color: "blue"
