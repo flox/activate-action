@@ -32,11 +32,11 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
 
       - name: "Install Flox"
-        uses: flox/install-flox-action@dc880156f423b1b9f03534c3ccbb3bc3bb8c223e # main
+        uses: flox/install-flox-action@f6002ed63e483f134001de7b4b45be891e00b09f # main
 
         with:
           channel: "${{ matrix.channel }}"
