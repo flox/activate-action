@@ -16,10 +16,20 @@ inputs:
   dir:
     description: "Path containing a .flox/ directory."
     default: null
+  trust:
+    description: >-
+      Trust the FloxHub environment for this activation only, passing
+      `--trust` to `flox activate`. Activation hooks run arbitrary code,
+      so Flox refuses to activate a FloxHub environment it does not
+      already trust, and a runner has no terminal to answer the prompt
+      on. Also covers remote environments pulled in by `[include]`.
+      Prefer trusting the environment once at install time — see the
+      "Trusting FloxHub environments" section of the README.
+    default: "false"
 
 runs:
   using: "composite"
   steps:
     - name: "Run flox activate"
       shell: "bash"
-      run: "flox activate ${{ inputs.environment != null && format('-r={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} -c '${{ inputs.command }}'"
+      run: "flox activate ${{ inputs.environment != null && format('-r={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} ${{ inputs.trust == 'true' && '--trust' || '' }} -c '${{ inputs.command }}'"
