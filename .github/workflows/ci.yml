@@ -52,3 +52,38 @@ jobs:
         with:
           command: "python --version"
           dir: "./test-env"
+
+      # `brendaneamon/activate-action-trust-test` is a public FloxHub
+      # environment that `flox` does not own, so a logged-out runner reaches
+      # the trust prompt rather than an auth or not-found error.
+      - name: "Check the trust test environment is untrusted"
+        shell: "bash"
+        run: |
+          # Assert *why* the next step fails, so a deleted environment or a
+          # FloxHub outage cannot pass the check below by failing for an
+          # unrelated reason.
+          output="$(flox activate -r=brendaneamon/activate-action-trust-test -c hello 2>&1 || true)"
+          echo "$output"
+          grep -q "is not trusted" <<< "$output"
+
+      - name: "Test untrusted Remote environment"
+        id: "untrusted"
+        continue-on-error: true
+        uses: "./"
+        with:
+          environment: "brendaneamon/activate-action-trust-test"
+          command: "hello"
+
+      - name: "Check untrusted Remote environment failed"
+        if: steps.untrusted.outcome != 'failure'
+        shell: "bash"
+        run: |
+          echo "Activating an untrusted environment without trust should fail." >&2
+          exit 1
+
+      - name: "Test Remote environment with trust"
+        uses: "./"
+        with:
+          environment: "brendaneamon/activate-action-trust-test"
+          command: "hello"
+          trust: true
