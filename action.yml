@@ -32,4 +32,23 @@ runs:
   steps:
     - name: "Run flox activate"
       shell: "bash"
-      run: "flox activate ${{ inputs.environment != null && format('-r={0}', inputs.environment) || '' }} ${{ inputs.dir != null && format('--dir={0}', inputs.dir) || '' }} ${{ inputs.trust == 'true' && '--trust' || '' }} -c '${{ inputs.command }}'"
+      # Inputs reach the script only as environment variables, so their values
+      # are never parsed as shell. Flox reads every `FLOX_*` variable as config,
+      # hence the `INPUT_` prefix.
+      env:
+        INPUT_COMMAND: "${{ inputs.command }}"
+        INPUT_ENVIRONMENT: "${{ inputs.environment }}"
+        INPUT_DIR: "${{ inputs.dir }}"
+        INPUT_TRUST: "${{ inputs.trust == 'true' }}"
+      run: |
+        args=()
+        if [[ -n "$INPUT_ENVIRONMENT" ]]; then
+          args+=("-r=$INPUT_ENVIRONMENT")
+        fi
+        if [[ -n "$INPUT_DIR" ]]; then
+          args+=("--dir=$INPUT_DIR")
+        fi
+        if [[ "$INPUT_TRUST" == "true" ]]; then
+          args+=("--trust")
+        fi
+        flox activate "${args[@]}" -c "$INPUT_COMMAND"

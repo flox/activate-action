@@ -52,6 +52,18 @@ jobs:
         with:
           command: "python --version"
           dir: "./test-env"
+          # Passed here so that a real `flox` sees `--trust` on every run. The
+          # stub in `test-arguments` would record the flag just as happily if a
+          # Flox release renamed or removed it.
+          trust: true
+
+      - name: "Test quotes in command"
+        uses: "./"
+        with:
+          dir: "./test-env"
+          command: |
+            greeting='hello world'
+            test "$greeting" = 'hello world'
 
   test-arguments:
     name: "Argument Construction"
@@ -105,6 +117,16 @@ jobs:
           dir: "./test-env"
           command: "true"
 
+      - name: "Record a command containing quotes"
+        uses: "./"
+        env:
+          STUB_ARGV_FILE: "${{ runner.temp }}/argv-quotes"
+        with:
+          dir: "./test-env"
+          command: |
+            greeting='hello world'
+            test "$greeting" = 'hello world'
+
       - name: "Check the arguments"
         shell: "bash"
         run: |
@@ -138,5 +160,27 @@ jobs:
           read_argv "$RUNNER_TEMP/argv-dir"
           if ! has "--dir=./test-env"; then fail "dir should become --dir="; fi
           if has "--trust"; then fail "an unset trust should not add --trust"; fi
+
+          # The command must reach Flox as one argument, byte for byte. v1
+          # wrapped it in single quotes inside the script, so a command
+          # containing one was split here.
+          read_argv "$RUNNER_TEMP/argv-quotes"
+          expected="$(cat <<'EOF'
+          greeting='hello world'
+          test "$greeting" = 'hello world'
+          EOF
+          )"
+
+          # Whether the block scalar's trailing newline survives is YAML's
+          # business, not this action's, so normalise it away on both sides.
+          actual="${argv[3]}"
+          while [[ "$actual" == *$'\n' ]]; do actual="${actual%$'\n'}"; done
+
+          if [[ "${#argv[@]}" -ne 4 ]]; then
+            fail "a command with quotes and newlines must stay a single argument"
+          fi
+          if [[ "$actual" != "$expected" ]]; then
+            fail "the command reached Flox altered"
+          fi
 
           echo "Argument assertions passed."

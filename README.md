@@ -65,13 +65,13 @@ jobs:
           trusted-environments: my-username/my-netlify-env
 
       - name: Build website
-        uses: flox/activate-action@v1
+        uses: flox/activate-action@v2
         with:
           command: npm run build
           dir: ./frontend
 
       - name: Activate remote environment
-        uses: flox/activate-action@v1
+        uses: flox/activate-action@v2
         with:
           environment: my-username/my-netlify-env
           command: netlify deploy
@@ -85,6 +85,38 @@ jobs:
 | `environment` | A FloxHub environment to activate, as `owner/name`. Omit to activate a local one. | |
 | `dir` | Directory containing the `.flox/` directory to activate. | current directory |
 | `trust` | Trust this one activation of a FloxHub environment, rather than trusting it for the whole job. | `false` |
+
+`environment` and `dir` reach the step as environment variables rather than as
+text pasted into a shell script, so a value containing quotes or spaces arrives
+unchanged. `command` is different: Flox runs it as a shell command, so whatever
+is put in it runs as shell. Keep untrusted text out of it by passing the value
+through `env:` on the step and naming it in the command:
+
+```yml
+- uses: flox/activate-action@v2
+  env:
+    PR_TITLE: ${{ github.event.pull_request.title }}
+  with:
+    command: echo "$PR_TITLE"
+```
+
+> [!IMPORTANT]
+> **Upgrading from v1.** v1 wrapped `command` in single quotes, so every single
+> quote inside it had to be written as `'\''`. v2 runs `command` as written, so
+> replace each `'\''` with a plain `'`:
+>
+> | v1 `command` | v2 `command` | v2 result if left unchanged |
+> | --- | --- | --- |
+> | `echo '\''quoted'\''` | `echo 'quoted'` | syntax error |
+> | `echo "it'\''s"` | `echo "it's"` | prints `it'\''s` |
+>
+> Search your workflows for `'\''` to find every command that needs the edit.
+>
+> v1 also pasted `environment` and `dir` into the script unquoted, so a shell
+> variable in either was expanded. v2 passes both literally, so
+> `dir: $GITHUB_WORKSPACE/frontend` now fails with `Did not find an environment
+> in '$GITHUB_WORKSPACE/frontend'`. Use a relative path, or let the workflow
+> expand it: `dir: ${{ github.workspace }}/frontend`.
 
 ## 🔐 Trusting FloxHub environments
 
@@ -119,7 +151,7 @@ runner's config, and overriding a `deny` already recorded there:
 
 ```yml
 - name: "Deploy"
-  uses: flox/activate-action@v1
+  uses: flox/activate-action@v2
   with:
     environment: my-org/my-env
     command: netlify deploy
