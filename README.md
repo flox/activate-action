@@ -61,8 +61,7 @@ jobs:
       - name: Install Flox
         uses: flox/install-flox-action@v2
         with:
-          # FloxHub environments must be trusted before they can be
-          # activated. See "Trusting FloxHub environments" below.
+          # Required before a FloxHub environment can be activated. See below.
           trusted-environments: my-username/my-netlify-env
 
       - name: Build website
@@ -83,66 +82,42 @@ jobs:
 | Input | Description | Default |
 | --- | --- | --- |
 | `command` | Command to run inside the environment. **Required.** | |
-| `environment` | A FloxHub environment to activate, as `owner/name`. Omit to use a local `.flox/` directory. | |
-| `dir` | Directory containing the `.flox/` directory to activate. | |
-| `trust` | Trust the FloxHub environment for this activation only. See below. | `false` |
+| `environment` | A FloxHub environment to activate, as `owner/name`. Omit to activate a local one. | |
+| `dir` | Directory containing the `.flox/` directory to activate. | current directory |
+| `trust` | Trust this one activation of a FloxHub environment, rather than trusting it for the whole job. | `false` |
 
 ## 🔐 Trusting FloxHub environments
 
-Activating an environment runs its `hook.on-activate` script, which is
-arbitrary code. Flox therefore refuses to activate a FloxHub environment it
-does not already trust, and normally asks you about it at the terminal. A
-GitHub Actions runner has no terminal to answer on, so the prompt becomes a
-hard failure:
+Activating an environment runs its `hook.on-activate` script, which is arbitrary
+code, so Flox asks before activating a FloxHub environment it does not already
+trust. A runner has no terminal to answer on, so the step fails instead:
 
 ```
 ✘ ERROR: The environment my-org/my-env is not trusted.
-
-flox environments do not run in a sandbox.
-Activation hooks can run arbitrary code on your machine.
-Thus, environments need to be trusted to be activated.
 ```
 
-This is not limited to the `environment` input. A **local** environment
-activated with `dir` hits the same check for every FloxHub environment its
-manifest pulls in via `[include]`, reported as `The included environment
-my-org/my-env is not trusted.`
+A local environment activated with `dir` hits the same check for every FloxHub
+environment its manifest pulls in through `[include]`.
 
-Two environments are trusted with no setup at all: those owned by `flox`
-(such as `flox/python-pip`), and your own, when you are signed in
-interactively. Everything else needs one of the following.
+Flox already trusts environments owned by `flox`, and your own while you are
+signed in interactively. Anything else needs one of the two options below.
 
-### Trust it once, at install time (recommended)
-
-[`flox/install-flox-action`][install-flox-action] takes a
-`trusted-environments` input, which records the trust decision in the
-runner's Flox config before any activation happens. Every later step — this
-action, a bare `flox activate`, an `[include]` — is then covered:
+**For the whole job**, use the `trusted-environments` input of
+[`flox/install-flox-action`][install-flox-action]. It records the decision
+before anything activates, so every later step is covered, including `[include]`s.
+Name several environments with commas, or a whole organization with `my-org/*`
+(Flox 1.14.0 or later):
 
 ```yml
 - name: "Install Flox"
   uses: flox/install-flox-action@v2
   with:
-    trusted-environments: my-org/my-env,my-org/other-env
+    trusted-environments: my-org/my-env
 ```
 
-To trust every environment an organization owns, use a wildcard, which needs
-Flox 1.14.0 or later:
-
-```yml
-    trusted-environments: my-org/*
-```
-
-This is the same thing as running
-`flox config --set 'trusted_environments."my-org/my-env"' trust` on the
-runner, and it is the option to reach for when a workflow activates more than
-one environment, or activates an environment indirectly through `[include]`.
-
-### Trust it for a single step
-
-When one step needs an environment the rest of the workflow does not, set
-`trust` on that step. It passes `--trust` to `flox activate`, which trusts the
-environment for that activation only and writes nothing to the config:
+**For a single step**, set `trust`. It passes `--trust` to `flox activate`,
+covering that activation and its `[include]`s without writing anything to the
+runner's config, and overriding a `deny` already recorded there:
 
 ```yml
 - name: "Deploy"
@@ -153,33 +128,14 @@ environment for that activation only and writes nothing to the config:
     trust: true
 ```
 
-`trust` covers the environment's `[include]`s too, and overrides a `deny`
-recorded in the config.
-
-### Authenticate as the environment's owner
-
-Flox always trusts an environment whose owner matches the signed-in handle, so
-authenticating as the owner removes the need to trust it separately. Set
-`FLOX_FLOXHUB_TOKEN` from a repository secret — you need this anyway for a
-private environment, which cannot be fetched without it:
-
-```yml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    env:
-      FLOX_FLOXHUB_TOKEN: ${{ secrets.FLOX_SERVICE_TOKEN }}
-```
-
 > [!IMPORTANT]
-> This shortcut only applies when the CLI can read your handle out of the
-> token without calling FloxHub, which is true of the token an interactive
-> `flox auth login` stores. It is **not** true of the opaque `flox_pat_`
-> (personal access) and `flox_sat_` (service account) tokens, whose handle is
-> resolved lazily and which `flox activate` never resolves. A workflow
-> authenticating with one of those still needs `trusted-environments` or
-> `trust`. Use the token to get *access* to the environment, and one of the
-> two options above to get *trust*.
+> Authenticating as the environment's owner is **not** a third option. Flox does
+> trust an environment whose owner matches your handle, but it reads that handle
+> only from the token itself — which works for the JWT an interactive
+> `flox auth login` stores, and not for the opaque `flox_pat_` (personal access)
+> and `flox_sat_` (service account) tokens a workflow would use. Set
+> `FLOX_FLOXHUB_TOKEN` to get *access* to a private environment, and one of the
+> options above to get *trust*.
 
 ## 📫 Have a question? Want to chat? Ran into a problem?
 
