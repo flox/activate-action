@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# A recording stand-in for the `flox` CLI, used by the "Argument Construction"
+# CI job.
+#
+# This action's own responsibility is turning inputs into `flox activate`
+# arguments; whether Flox then honours `--trust` is Flox's, and is covered by
+# `m10.0`-`m10.3` in its `environment-remote.bats` suite. Asserting against a
+# recording of argv keeps those tests hermetic: no FloxHub environment to
+# depend on, no network, and nothing to break when an environment owned by
+# somebody else is renamed or deleted.
+#
+# Arguments are written NUL-delimited so that one containing a space or a
+# newline stays a single argument in the recording — argument boundaries being
+# exactly what the assertions are checking.
+set -euo pipefail
+
+: "${STUB_ARGV_FILE:?must point at a writable path for the argv recording}"
+
+printf '%s\0' "$@" > "$STUB_ARGV_FILE"
