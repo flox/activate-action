@@ -88,19 +88,17 @@ jobs:
 
 ## 🔐 Trusting FloxHub environments
 
-Activating an environment runs its `hook.on-activate` script, which is arbitrary
-code, so Flox asks before activating a FloxHub environment it does not already
-trust. A runner has no terminal to answer on, so the step fails instead:
+Activation hooks run arbitrary code, so Flox refuses to activate a FloxHub
+environment it does not already trust and the step fails:
 
 ```
 ✘ ERROR: The environment my-org/my-env is not trusted.
 ```
 
-A local environment activated with `dir` hits the same check for every FloxHub
-environment its manifest pulls in through `[include]`.
-
-Flox already trusts environments owned by `flox`, and your own while you are
-signed in interactively. Anything else needs one of the two options below.
+The check covers the FloxHub environment named with `environment`, and every
+FloxHub environment the activated environment pulls in through `[include]`,
+whether that environment is local or on FloxHub. Environments owned by `flox`
+are always trusted. For anything else, pick one of these:
 
 **For the whole job**, use the `trusted-environments` input of
 [`flox/install-flox-action`][install-flox-action]. It records the decision
@@ -128,14 +126,11 @@ runner's config, and overriding a `deny` already recorded there:
     trust: true
 ```
 
-> [!IMPORTANT]
-> Authenticating as the environment's owner is **not** a third option. Flox does
-> trust an environment whose owner matches your handle, but it reads that handle
-> only from the token itself — which works for the JWT an interactive
-> `flox auth login` stores, and not for the opaque `flox_pat_` (personal access)
-> and `flox_sat_` (service account) tokens a workflow would use. Set
-> `FLOX_FLOXHUB_TOKEN` to get *access* to a private environment, and one of the
-> options above to get *trust*.
+> [!NOTE]
+> Authenticating as the environment's owner is not a substitute for either. A
+> `flox_pat_` or `flox_sat_` token gives a job *access* to an environment but
+> not *trust*, so set `FLOX_FLOXHUB_TOKEN` to reach a private environment and
+> still pick one of the options above.
 
 ## 📫 Have a question? Want to chat? Ran into a problem?
 
