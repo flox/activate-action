@@ -53,37 +53,90 @@ jobs:
           command: "python --version"
           dir: "./test-env"
 
-      # `brendaneamon/activate-action-trust-test` is a public FloxHub
-      # environment that `flox` does not own, so a logged-out runner reaches
-      # the trust prompt rather than an auth or not-found error.
-      - name: "Check the trust test environment is untrusted"
+  test-arguments:
+    name: "Argument Construction"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    strategy:
+      matrix:
+        os:
+          - "ubuntu-latest"
+          - "macos-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      # Flox is deliberately not installed for this job. `test-stub/flox`
+      # records the arguments the action builds, which is this action's
+      # responsibility; whether Flox honours `--trust` is Flox's, and is
+      # covered by `m10.0`-`m10.3` in its `environment-remote.bats` suite.
+      # Recording argv keeps these tests hermetic — no FloxHub environment to
+      # depend on and no network.
+      - name: "Install the recording flox stub"
         shell: "bash"
         run: |
-          # Assert *why* the next step fails, so a deleted environment or a
-          # FloxHub outage cannot pass the check below by failing for an
-          # unrelated reason.
-          output="$(flox activate -r=brendaneamon/activate-action-trust-test -c hello 2>&1 || true)"
-          echo "$output"
-          grep -q "is not trusted" <<< "$output"
+          chmod +x "$GITHUB_WORKSPACE/test-stub/flox"
+          echo "$GITHUB_WORKSPACE/test-stub" >> "$GITHUB_PATH"
 
-      - name: "Test untrusted Remote environment"
-        id: "untrusted"
-        continue-on-error: true
+      - name: "Record a remote activation with trust"
         uses: "./"
+        env:
+          STUB_ARGV_FILE: "${{ runner.temp }}/argv-remote-trust"
         with:
-          environment: "brendaneamon/activate-action-trust-test"
-          command: "hello"
-
-      - name: "Check untrusted Remote environment failed"
-        if: steps.untrusted.outcome != 'failure'
-        shell: "bash"
-        run: |
-          echo "Activating an untrusted environment without trust should fail." >&2
-          exit 1
-
-      - name: "Test Remote environment with trust"
-        uses: "./"
-        with:
-          environment: "brendaneamon/activate-action-trust-test"
-          command: "hello"
+          environment: "my-org/my-env"
+          command: "true"
           trust: true
+
+      - name: "Record a remote activation without trust"
+        uses: "./"
+        env:
+          STUB_ARGV_FILE: "${{ runner.temp }}/argv-remote"
+        with:
+          environment: "my-org/my-env"
+          command: "true"
+
+      - name: "Record a directory activation"
+        uses: "./"
+        env:
+          STUB_ARGV_FILE: "${{ runner.temp }}/argv-dir"
+        with:
+          dir: "./test-env"
+          command: "true"
+
+      - name: "Check the arguments"
+        shell: "bash"
+        run: |
+          argv=()
+          read_argv() {
+            argv=()
+            while IFS= read -r -d '' arg; do argv+=("$arg"); done < "$1"
+          }
+          has() {
+            local candidate
+            for candidate in "${argv[@]}"; do
+              if [[ "$candidate" == "$1" ]]; then return 0; fi
+            done
+            return 1
+          }
+          fail() {
+            echo "$1" >&2
+            printf '  argv: %q\n' "${argv[@]}" >&2
+            exit 1
+          }
+
+          read_argv "$RUNNER_TEMP/argv-remote-trust"
+          if ! has "-r=my-org/my-env"; then fail "environment should become -r="; fi
+          if ! has "--trust"; then fail "trust: true should add --trust"; fi
+
+          read_argv "$RUNNER_TEMP/argv-remote"
+          if ! has "-r=my-org/my-env"; then fail "environment should become -r="; fi
+          if has "--trust"; then fail "an unset trust should not add --trust"; fi
+          if has "--dir="; then fail "an unset dir should not add --dir="; fi
+
+          read_argv "$RUNNER_TEMP/argv-dir"
+          if ! has "--dir=./test-env"; then fail "dir should become --dir="; fi
+          if has "--trust"; then fail "an unset trust should not add --trust"; fi
+
+          echo "Argument assertions passed."
